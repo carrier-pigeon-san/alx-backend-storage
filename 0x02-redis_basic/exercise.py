@@ -2,7 +2,18 @@
 """Cache class module for simple cache implementation using redis"""
 import redis
 from uuid import uuid4
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
+from functools import wraps
+
+
+def count_calls(method: Callable) -> Callable:
+    """Decorator that counts how many times a method is called"""
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        key = f"count:{method.__qualname__}"
+        self._redis.incr(key)
+        return method(self, *args, **kwargs)
+    return wrapper
 
 
 class Cache:
@@ -11,9 +22,10 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
-    def store(self, data: any) -> str:
+    @count_calls
+    def store(self, data: Union[str, bytes, int, float]) -> str:
         """Stores data in the cache using a generated key"""
-        key = str(uuid4())
+        key: str = str(uuid4())
         self._redis.set(key, data)
         return key
 
@@ -29,6 +41,6 @@ class Cache:
         """Retrieves a string value from the cache."""
         return self.get(key, lambda x: x.decode("utf-8"))
 
-    def get_it(self, key: str) -> Optional[int]:
+    def get_int(self, key: str) -> Optional[int]:
         """Retrieves an integer value from the cache."""
         return self.get(key, lambda x: int(x))
