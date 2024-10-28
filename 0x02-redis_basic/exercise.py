@@ -10,7 +10,7 @@ def count_calls(method: Callable) -> Callable:
     """Decorator that counts how many times a method is called"""
     @wraps(method)
     def wrapper(self, *args, **kwargs):
-        key = f"{method.__qualname__}"
+        key = method.__qualname__
         self._redis.incr(key)
         return method(self, *args, **kwargs)
     return wrapper
