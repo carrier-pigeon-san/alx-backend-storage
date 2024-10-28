@@ -7,6 +7,7 @@ from typing import Callable
 
 r = redis.Redis()
 
+
 def count_calls(method: Callable) -> Callable:
     """Counts how many times get_page has been called."""
     @wraps(method)
