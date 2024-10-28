@@ -64,13 +64,14 @@ def replay(method: Callable) -> None:
     """Displays the history of calls of a particular function"""
     cache = Cache()
     method_name = method.__qualname__
+
+    call_count = cache._redis.get(method_name)
+    call_count = int(call_count.decode('utf-8')) if call_count else 0
+
     inputs = cache._redis.lrange(f"{method_name}:inputs", 0, -1)
     outputs = cache._redis.lrange(f"{method_name}:outputs", 0, -1)
 
-    print("{} was called {} times:".format(
-        method_name,
-        cache._redis.get(method_name).decode('utf-8')
-        ))
+    print("{} was called {} times:".format(method_name, call_count))
 
     for i, (input, output) in enumerate(zip(inputs, outputs), 1):
         print("{}(*{}) -> {}".format(
