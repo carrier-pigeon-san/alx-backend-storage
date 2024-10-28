@@ -58,3 +58,23 @@ class Cache:
     def get_int(self, key: str) -> Optional[int]:
         """Retrieves an integer value from the cache."""
         return self.get(key, lambda x: int(x))
+
+
+def replay(method: Callable) -> None:
+    """Displays the history of calls of a particular function"""
+    cache = Cache()
+    method_name = method.__qualname__
+    inputs = cache._redis.lrange(f"{method_name}:inputs", 0, -1)
+    outputs = cache._redis.lrange(f"{method_name}:outputs", 0, -1)
+
+    print("{} was called {} times:".format(
+        method_name,
+        cache._redis.get(method_name).decode('utf-8')
+        ))
+
+    for i, (input, output) in enumerate(zip(inputs, outputs), 1):
+        print("{}(*{}) -> {}".format(
+            method_name,
+            input.decode('utf-8'),
+            output.decode('utf-8')
+            ))
